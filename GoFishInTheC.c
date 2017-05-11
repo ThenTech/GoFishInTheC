@@ -20,6 +20,7 @@
 
 #ifndef __cplusplus
 	typedef enum { false = 0, true = 1 } bool;
+	#define PointerT(T, p)	((T*)&p)
 #endif // __cplusplus
 
 #ifdef _WIN32
