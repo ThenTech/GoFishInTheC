@@ -4,22 +4,32 @@
 #include <time.h>
 #include <string.h>
 #include <assert.h>
-//https://rosettacode.org/wiki/Go_Fish/C
+
+#define INPUT_BUFFER_SIZE	10u
+
 #ifdef _MSC_VER
 	#include <intrin.h>
 	#define countLeftZeros	__lzcnt
 	#define countOnes		__popcnt64
-	#define gets			gets_s
+	#define gets(s)			gets_s(s, INPUT_BUFFER_SIZE)
 	#define strcasecmp		_stricmp
 #else
 	#define countLeftZeros	__builtin_clz
 	#define countOnes		__builtin_popcountll
-#endif
+#endif // _MSC_VER
 
 #ifndef __cplusplus
 	typedef enum { false = 0, true = 1 } bool;
-	#define PointerT(T, p)			((T*)&p)
-#endif
+#endif // __cplusplus
+
+#ifdef _WIN32
+	#include <windows.h>
+	#define setWindowTitle(S)	SetConsoleTitle(S)
+	#define clearConsole()		system("CLS");
+#else
+	#define setWindowTitle(S)	printf("%c]0;%s%c", '\033', S, '\007');
+	#define clearConsole()		system("clear");
+#endif // __WIN32
 
 #define PLAYER_START_CARDS		9u
 #define AI_CHEAT_PROBABILITY	0.3f
@@ -28,22 +38,22 @@
 //#define DEBUG_AI
 
 
-typedef enum CARDS  {
-	S1 = 0x0001, S2 = 0x0002, S3 = 0x0004, S4 = 0x0008, S5 = 0x0010,
-	S6 = 0x0020, S7 = 0x0040, S8 = 0x0080, S9 = 0x0100, S10 = 0x0200,
-	SJ = 0x0400, SQ = 0x0800, SK = 0x1000,
+typedef enum CARDS {
+	S1 = 0x0001ull, S2 = 0x0002ull, S3 = 0x0004ull, S4 = 0x0008ull,  S5 = 0x0010ull,
+	S6 = 0x0020ull, S7 = 0x0040ull, S8 = 0x0080ull, S9 = 0x0100ull, S10 = 0x0200ull,
+	SJ = 0x0400ull, SQ = 0x0800ull, SK = 0x1000ull,
 
-	K1 = 0x0002000, K2 = 0x0004000, K3 = 0x0008000, K4 = 0x0010000, K5 = 0x0020000,
-	K6 = 0x0040000, K7 = 0x0080000, K8 = 0x0100000, K9 = 0x0200000, K10 = 0x0400000,
-	KJ = 0x0800000, KQ = 0x1000000, KK = 0x2000000,
+	K1 = 0x0002000ull, K2 = 0x0004000ull, K3 = 0x0008000ull, K4 = 0x0010000ull,  K5 = 0x0020000ull,
+	K6 = 0x0040000ull, K7 = 0x0080000ull, K8 = 0x0100000ull, K9 = 0x0200000ull, K10 = 0x0400000ull,
+	KJ = 0x0800000ull, KQ = 0x1000000ull, KK = 0x2000000ull,
 
-	R1 = 0x0004000000, R2 = 0x0008000000, R3 = 0x0010000000, R4 = 0x0020000000, R5 = 0x0040000000,
-	R6 = 0x0080000000, R7 = 0x0100000000, R8 = 0x0200000000, R9 = 0x0400000000, R10 = 0x0800000000,
-	RJ = 0x1000000000, RQ = 0x2000000000, RK = 0x4000000000,
+	R1 = 0x0004000000ull, R2 = 0x0008000000ull, R3 = 0x0010000000ull, R4 = 0x0020000000ull,  R5 = 0x0040000000ull,
+	R6 = 0x0080000000ull, R7 = 0x0100000000ull, R8 = 0x0200000000ull, R9 = 0x0400000000ull, R10 = 0x0800000000ull,
+	RJ = 0x1000000000ull, RQ = 0x2000000000ull, RK = 0x4000000000ull,
 
-	H1 = 0x0008000000000, H2 = 0x0010000000000, H3 = 0x0020000000000, H4 = 0x0040000000000, H5 = 0x0080000000000,
-	H6 = 0x0100000000000, H7 = 0x0200000000000, H8 = 0x0400000000000, H9 = 0x0800000000000, H10 = 0x1000000000000,
-	HJ = 0x2000000000000, HQ = 0x4000000000000, HK = 0x8000000000000,
+	H1 = 0x0008000000000ull, H2 = 0x0010000000000ull, H3 = 0x0020000000000ull, H4 = 0x0040000000000ull,  H5 = 0x0080000000000ull,
+	H6 = 0x0100000000000ull, H7 = 0x0200000000000ull, H8 = 0x0400000000000ull, H9 = 0x0800000000000ull, H10 = 0x1000000000000ull,
+	HJ = 0x2000000000000ull, HQ = 0x4000000000000ull, HK = 0x8000000000000ull,
 
 	SCHOPPEN = (SK << 1ull) - 1ull,
 	KLAVEREN = (KK << 1ull) - 1ull - SCHOPPEN,
@@ -94,7 +104,7 @@ static void updateTitle(const Player * const p1, const uint32_t p1_stacks, const
 		sprintf(titlebuffer, game_title_format, p1->name, countOnes(p1->hand), p1_stacks, p2->name, countOnes(p2->hand), p2_stacks, countOnes(gamedeck));
 	#endif
 
-	system(titlebuffer);
+	setWindowTitle(titlebuffer);
 }
 
 void printCard(const CARD c, bool rank_only /* = false */) {
@@ -106,7 +116,7 @@ void printCard(const CARD c, bool rank_only /* = false */) {
 							 ? 3ull : 0ull;
 
 		if (!rank_only) putchar(suits[suit]);
-		printf(rank_only ? "%s" : "%-2s", ranks[31ull - countLeftZeros(c >> (suit * RANK_SIZE))]);
+		printf(rank_only ? "%s" : "%-2s", ranks[31u - countLeftZeros((uint32_t)(c >> (suit * RANK_SIZE)))]);
 	}
 }
 
@@ -216,11 +226,11 @@ void playerCheckHandForStacks(Player * const player) {
 }
 
 static inline uint32_t playerCountStacks(const Player * const player) {
-	return countOnes(player->stacks) / SUIT_SIZE;
+	return (uint32_t)countOnes(player->stacks) / SUIT_SIZE;
 }
 
 bool playerRequestRank(DECK * const gamedeck, Player * const player, Player *const pc) {
-	char buff[2];
+	char buff[INPUT_BUFFER_SIZE];
 	CARD c;
 
 	if (!player->hand) {
@@ -280,7 +290,7 @@ CARD pcUpdateAskHistory(const CARD asked) {
 }
 
 bool pcRequestRank(DECK * const gamedeck, Player * const pc, Player * const player) {
-	char buff[2];
+	char buff[INPUT_BUFFER_SIZE];
 	DECK cards_to_ask_mask = NONE;
 	CARD ask_for_card, ask_for_card_rank;
 	uint32_t tried_finding_card = 0u;
@@ -413,7 +423,7 @@ bool checkGameWon(const DECK deck_stapel, const Player * const p1, const Player 
 }
 
 int main() {
-	srand(time(NULL));
+	srand((uint32_t)time(NULL));
 
 	// Set-up game
 	bool won = false;
@@ -456,7 +466,7 @@ int main() {
 		if (won || checkGameWon(deck_stapel, PointerT(Player, player_1), PointerT(Player, player_pc))) break;
 
 		getchar();
-		system("CLS");
+		clearConsole();
 	}
 
 	getchar();
