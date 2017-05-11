@@ -96,7 +96,7 @@ static const char* ranks[RANK_SIZE] = { "1", "2", "3", "4", "5", "6", "7", "8", 
 static const CARD  stackMasks[] = { ONES, TWOS, THREES, FOURS, FIVES, SIXES, SEVENS, EIGHTS, NINES, TENS, JACKS, QUEENS, KINGS };
 
 static void updateTitle(const Player * const p1, const uint32_t p1_stacks, const Player * const p2, const uint32_t p2_stacks, const DECK gamedeck) {
-	static const char *game_title_format = "TITLE Go Fish in the C :: [Score] %6s: % 2d cards in hand and % 2d stacks, %6s: % 2d cards in hand and % 2d stacks, %2d cards left in stack";
+	static const char *game_title_format = "Go Fish in the C :: [Score] %6s: % 2d cards in hand and % 2d stacks, %6s: % 2d cards in hand and % 2d stacks, %2d cards left in stack";
 	static char titlebuffer[150u];
 
 	#ifdef _MSC_VER
