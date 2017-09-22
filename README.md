@@ -13,14 +13,14 @@ The player with the most stacks, wins.
  - Main logic is handled by:
    1. **playerRequestRank**
    
-      Ask for user input and gives appropriate response when requested rank is available or not
+      Ask for user input and gives appropriate response when requested rank is available or not;
    2. **pcRequestRank**
    
       Configure percentage that causes the AI to make a 'smart' guess.
       Creates a mask of possible cards to ask (rank included in hand),
       and might narrow it down by 'cheating' and looking at the player's cards.
       Then picks a card at random from the mask to actually ask.
-      Last guesses are cached to avoid continiously asjing the same card.
+      Last guesses are cached to avoid continuously asking the same card.
       Additionally, the player cannot cheat by saying `no` when he has the requested card in his hand.
- - Score is kept in window title, when no cards are left both the players's hands and the deck,
+ - Score is kept in window title, when no cards are left, both the players's hands and the deck,
    the game is won by the player with the most stacks.
